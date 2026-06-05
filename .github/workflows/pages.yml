@@ -16,11 +16,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Prepare deploy directory
+        run: |
+          rm -rf deploy
+          mkdir deploy
+          rsync -av --exclude='.git' --exclude='.github' --exclude='deploy' --exclude='README.md' --exclude='*.yml' --exclude='*.yaml' --exclude='*.gitignore' --exclude='*.md' . deploy/
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
+          publish_dir: ./deploy
           publish_branch: gh-pages
           user_name: github-actions[bot]
           user_email: github-actions[bot]@users.noreply.github.com

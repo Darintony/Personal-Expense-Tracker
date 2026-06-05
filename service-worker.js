@@ -1,13 +1,15 @@
 const CACHE_NAME = 'fintrack-shell-v1';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/pages/about.html',
-  '/css/style.css',
-  '/js/app.js',
-  '/js/pwa.js',
-  '/manifest.json',
-  '/public/IMG-20260131-WA0041.jpg.jpeg'
+  './',
+  'index.html',
+  'pages/about.html',
+  'css/style.css',
+  'js/app.js',
+  'js/pwa.js',
+  'manifest.json',
+  'service-worker.js',
+  'public/IMG-20260131-WA0041.jpg.jpeg',
+  'public/icon.svg'
 ];
 
 self.addEventListener('install', event => {
