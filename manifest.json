@@ -10,6 +10,11 @@
   "background_color": "#ffffff",
   "icons": [
     {
+      "src": "public/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
       "src": "public/IMG-20260131-WA0041.jpg.jpeg",
       "sizes": "512x512",
       "type": "image/jpeg"

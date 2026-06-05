@@ -28,6 +28,19 @@ To install:
 
 The site will open in standalone mode with its own app window and keep working locally using cached files.
 
+## GitHub Pages Deployment
+
+This repo now includes a GitHub Actions workflow that deploys the site to the `gh-pages` branch automatically whenever `main` is pushed.
+
+To enable GitHub Pages:
+
+1. Open the repository settings on GitHub.
+2. Go to the Pages section.
+3. Choose `gh-pages` as the source branch and set the folder to `/`.
+4. Save.
+
+Once configured, your app will be available at `https://Darintony.github.io/Personal-Expense-Tracker/`.
+
 ## Push to GitHub
 
 If you want to push this project to `https://github.com/Darintony/Personal-Expense-Tracker`, run the commands below (replace `main` with your preferred branch name):
