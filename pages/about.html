@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About — FinTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=7"/>
+  <style>
+    body { display:block; padding:2rem; max-width:860px; margin:0 auto; }
+    .about-back { display:inline-flex; align-items:center; gap:.5rem; color:var(--accent); text-decoration:none; font-family:'Syne',sans-serif; font-weight:600; margin-bottom:2rem; }
+    .about-hero { margin-bottom:3rem; }
+    .about-hero h1 { font-family:'Syne',sans-serif; font-size:3rem; font-weight:800; color:var(--text-primary); margin:0 0 .5rem; }
+    .about-hero p { color:var(--text-muted); font-size:1.1rem; }
+    .about-section { margin-bottom:2.5rem; }
+    .about-section h2 { font-family:'Syne',sans-serif; font-weight:700; color:var(--accent); border-bottom:2px solid var(--accent); padding-bottom:.5rem; margin-bottom:1rem; }
+    .feature-list { list-style:none; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+    .feature-list li { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius); padding:.75rem 1rem; font-size:.9rem; }
+    .tech-chips { display:flex; flex-wrap:wrap; gap:.5rem; }
+    .tech-chip { background:var(--accent); color:#fff; border-radius:999px; padding:.25rem 1rem; font-size:.85rem; font-family:'Syne',sans-serif; font-weight:600; }
+    .dev-card { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; }
+    .dev-card h3 { font-family:'Syne',sans-serif; margin:0 0 .25rem; }
+    .dev-card p { color:var(--text-muted); margin:.25rem 0; font-size:.9rem; }
+  </style>
+</head>
+<body>
+  <a href="../index.html" class="about-back">← Back to FinTrack</a>
+  <div class="about-hero">
+    <h1>FinTrack</h1>
+    <p>Advanced Personal Expense Tracker — manage, analyze, and master your finances.</p>
+  </div>
+
+  <div class="about-section">
+    <h2>Purpose</h2>
+    <p>FinTrack helps individuals take full control of their personal finances. Track every rupee, set budgets, analyze spending patterns, and generate detailed reports — all stored securely in your browser's local storage with no server required.</p>
+  </div>
+
+  <div class="about-section">
+    <h2>Features</h2>
+    <ul class="feature-list">
+      <li>📊 Interactive Dashboard with Charts</li>
+      <li>💰 Income & Expense Tracking</li>
+      <li>🎯 Monthly Budget & Category Management</li>
+      <li>🧠 Smart Financial Insights & Alerts</li>
+      <li>📈 Advanced Statistics & Analytics</li>
+      <li>📑 Daily/Weekly/Monthly/Yearly Reports</li>
+      <li>🏷️ Custom Category Management</li>
+      <li>🔍 Live Search & Advanced Filters</li>
+      <li>📤 Import/Export (CSV, Excel, PDF)</li>
+      <li>💾 Backup & Restore (JSON)</li>
+      <li>🌙 Dark Mode & Theme Customization</li>
+      <li>📱 Fully Responsive Design</li>
+      <li>🔔 Toast Notifications</li>
+      
+      <!-- New Student & Productivity Features -->
+      <li>🔑 Passcode Lock Security (Local PIN Login)</li>
+      <li>🏦 Smart Bank Statement Importer (SBI Yono etc. with fuzzy headers, separate Debit/Credit columns mapping, and review dashboard)</li>
+      <li>🏷️ Fuzzy Auto-Categorizer (narrative auto-tagging)</li>
+      <li>💵 Student Daily Survival Calculator (pocket money allocation)</li>
+      <li>📊 50/30/20 Rule Budgeting Split & Advice</li>
+      <li>⏰ Recurring Bill & Subscription due calendar ("Mark Paid" logic)</li>
+      <li>👥 Hostel Roommate Bill Splitter (Splitwise minimal debt matrix & Log Share ledger sync)</li>
+      <li>🤝 Direct Peer-to-Peer Loans (Lent / Borrowed) Ledger with one-click settlement sync</li>
+      <li>🐷 Piggy Bank Savings Goals (progress trackers)</li>
+      <li>🔒 Impulsive Buying Wishlist (30-day cooling-off lock)</li>
+      <li>📝 Persistent Quick Notepad Drawer (autosaves)</li>
+    </ul>
+  </div>
+
+  <div class="about-section">
+    <h2>Technologies Used</h2>
+    <div class="tech-chips">
+      <span class="tech-chip">HTML5</span>
+      <span class="tech-chip">CSS3</span>
+      <span class="tech-chip">JavaScript ES6+</span>
+      <span class="tech-chip">Chart.js</span>
+      <span class="tech-chip">jsPDF</span>
+      <span class="tech-chip">SheetJS (XLSX.js)</span>
+      <span class="tech-chip">Lucide Icons</span>
+      <span class="tech-chip">LocalStorage & SessionStorage</span>
+    </div>
+  </div>
+
+  <div class="about-section">
+    <h2>Developer</h2>
+    <div class="dev-card">
+      <h3 style="margin-top: 40px; margin-bottom: 16px;">Developer Details</h3>
+        <div class="tech-item">
+          <div class="tech-icon" style="border-radius: 50%; overflow: hidden; width:72px; height:72px; float:left; margin-right:12px;">
+            <img src="../public/Screenshot 2026-06-05 015317.png" alt="Developer Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+          <div class="tech-info">
+            <h5>Darin Tony</h5>
+            <p>Software Developer/ UI-UX Designer</p>
+            <p style="font-size: 12px; color: var(--accent-primary);">darintony36@gmail.com</p>
+            <p style="font-size: 12px; color: var(--accent-primary);">Phone: 8089596181</p>
+            <p style="font-size: 12px; color: var(--accent-primary);">
+              <a href="https://linkedin.com/in/darintony" target="_blank" style="color: var(--accent-primary);"><i class="fab fa-linkedin"></i> LinkedIn</a> | 
+              <a href="https://github.com/darintony" target="_blank" style="color: var(--accent-primary);"><i class="fab fa-github"></i> GitHub</a>
+            </p>
+          </div>
+          <div style="clear:both"></div>
+        </div>
+    </div>
+  </div>
+</body>
+</html>

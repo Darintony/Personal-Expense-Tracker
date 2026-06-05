@@ -1,0 +1,19 @@
+.DS_Store
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+dist/
+build/
+.vscode/
+*.log
+*.sqlite
+/public/*.db
+*.cache
+
+# images or generated files
+*.png
+*.jpg
+*.jpeg
+*.webp

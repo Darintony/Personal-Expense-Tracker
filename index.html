@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="blue" data-mode="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FinTrack — Personal Expense Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=7"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i data-lucide="wallet"></i></div>
+    <span class="brand-name">FinTrack</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active" data-page="dashboard"><i data-lucide="layout-dashboard"></i>Dashboard</a>
+    <a href="#" class="nav-item" data-page="transactions"><i data-lucide="arrow-left-right"></i>Transactions</a>
+    <a href="#" class="nav-item" data-page="add-transaction"><i data-lucide="plus-circle"></i>Add Transaction</a>
+    <a href="#" class="nav-item" data-page="budget"><i data-lucide="target"></i>Budget</a>
+    <a href="#" class="nav-item" data-page="subscriptions"><i data-lucide="bell"></i>Subscriptions</a>
+    <a href="#" class="nav-item" data-page="bill-splitter"><i data-lucide="users"></i>Bill Splitter</a>
+    <a href="#" class="nav-item" data-page="goals-wishlist"><i data-lucide="award"></i>Goals & Wishlist</a>
+    <a href="#" class="nav-item" data-page="statistics"><i data-lucide="pie-chart"></i>Statistics</a>
+    <a href="#" class="nav-item" data-page="reports"><i data-lucide="file-text"></i>Reports</a>
+    <a href="#" class="nav-item" data-page="categories"><i data-lucide="tag"></i>Categories</a>
+    <a href="#" class="nav-item" data-page="import-export"><i data-lucide="refresh-cw"></i>Import / Export</a>
+    <a href="#" class="nav-item" data-page="backup"><i data-lucide="database"></i>Backup</a>
+    <a href="pages/about.html?v=7" class="nav-item"><i data-lucide="info"></i>About</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="theme-row">
+      <span style="font-size:0.75rem; font-weight:700; color:#fff; opacity:0.6;">THEME</span>
+      <div class="theme-controls">
+        <button class="theme-btn active" data-theme="blue" title="Royal Indigo" style="background:#4F46E5;"></button>
+        <button class="theme-btn" data-theme="green" title="Forest Emerald" style="background:#059669;"></button>
+        <button class="theme-btn" data-theme="purple" title="Cyber Violet" style="background:#7C3AED;"></button>
+        <button class="theme-btn" data-theme="coral" title="Coral Sunset" style="background:#E11D48;"></button>
+        <button class="theme-btn" data-theme="slate" title="Obsidian Slate" style="background:#475569;"></button>
+      </div>
+    </div>
+    <button class="dark-toggle" id="darkToggle" title="Toggle Dark Mode">
+      <i data-lucide="moon"></i> Mode Toggle
+    </button>
+    <button class="dark-toggle" id="lockToggle" title="Lock App Passcode" style="margin-top:0.35rem; color:var(--danger); border-color:rgba(239, 68, 68, 0.2); background:rgba(239, 68, 68, 0.05);">
+      <i data-lucide="lock"></i> Lock App
+    </button>
+  </div>
+</aside>
+
+<!-- Mobile Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Main Content -->
+<main class="main-content">
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="hamburger" id="hamburger">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="topbar-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-actions" style="display:flex; align-items:center; gap:1rem;">
+      <div class="search-wrap">
+        <input type="text" id="globalSearch" placeholder="Search transactions (Press / to search)…" autocomplete="off"/>
+        <span class="search-icon"><i data-lucide="search"></i></span>
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+      <button class="btn-icon" id="toggleNotepad" title="Quick Notepad" style="height:38px; width:38px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+        <i data-lucide="file-edit"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Pages -->
+  <div class="page-container">
+
+    <!-- ======= DASHBOARD ======= -->
+    <section class="page active" id="page-dashboard">
+      <div class="dashboard-layout">
+        <div class="dashboard-main">
+          <!-- Summary Cards -->
+          <div class="summary-grid">
+            <div class="summary-card income">
+              <div class="card-label">Total Income</div>
+              <div class="card-amount" id="dash-income">₹0.00</div>
+              <div class="card-icon"><i data-lucide="arrow-up-right"></i></div>
+            </div>
+            <div class="summary-card expense">
+              <div class="card-label">Total Expenses</div>
+              <div class="card-amount" id="dash-expense">₹0.00</div>
+              <div class="card-icon"><i data-lucide="arrow-down-left"></i></div>
+            </div>
+            <div class="summary-card balance">
+              <div class="card-label">Balance</div>
+              <div class="card-amount" id="dash-balance">₹0.00</div>
+              <div class="card-icon"><i data-lucide="wallet"></i></div>
+            </div>
+            <div class="summary-card transactions">
+              <div class="card-label">Transactions</div>
+              <div class="card-amount" id="dash-count">0</div>
+              <div class="card-icon"><i data-lucide="list"></i></div>
+            </div>
+            <div class="summary-card highlight">
+              <div class="card-label">Top Expense Category</div>
+              <div class="card-amount card-text" id="dash-top-cat">—</div>
+              <div class="card-icon"><i data-lucide="tag"></i></div>
+            </div>
+            <div class="summary-card savings">
+              <div class="card-label">Monthly Savings</div>
+              <div class="card-amount" id="dash-savings">₹0.00</div>
+              <div class="card-icon"><i data-lucide="piggy-bank"></i></div>
+            </div>
+          </div>
+          <!-- Charts -->
+          <div class="chart-grid">
+            <div class="chart-card">
+              <div class="chart-title">Expense by Category</div>
+              <canvas id="categoryChart"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Income vs Expense</div>
+              <canvas id="incomeExpenseChart"></canvas>
+            </div>
+            <div class="chart-card wide">
+              <div class="chart-title">Monthly Spending Trend</div>
+              <canvas id="trendChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-aside">
+          <!-- Quick Action Widget -->
+          <div class="widget-card">
+            <div class="widget-header">
+              <div class="widget-title"><i data-lucide="zap"></i> Quick Entry</div>
+            </div>
+            <div class="quick-actions-grid">
+              <button class="quick-action-btn" onclick="App.addQuickTx('Food', 'expense')">
+                <i data-lucide="coffee"></i>
+                <span>Coffee / Snack</span>
+                <small>₹100 Expense</small>
+              </button>
+              <button class="quick-action-btn" onclick="App.addQuickTx('Transport', 'expense')">
+                <i data-lucide="car"></i>
+                <span>Cab / Fuel</span>
+                <small>₹300 Expense</small>
+              </button>
+              <button class="quick-action-btn" onclick="App.addQuickTx('Salary', 'income')">
+                <i data-lucide="briefcase"></i>
+                <span>Salary</span>
+                <small>Income Source</small>
+              </button>
+              <button class="quick-action-btn" onclick="App.navigate('add-transaction')">
+                <i data-lucide="plus"></i>
+                <span>New Custom</span>
+                <small>Add custom transaction</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Recent Transactions Widget -->
+          <div class="widget-card">
+            <div class="widget-header">
+              <div class="widget-title"><i data-lucide="clock"></i> Recent Activity</div>
+              <a href="#" onclick="App.navigate('transactions'); return false;" style="font-size:0.8rem; font-weight:700; color:var(--accent); text-decoration:none;">View All</a>
+            </div>
+            <div class="recent-list" id="dashboardRecentList">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Smart Financial Insights Widget -->
+          <div class="widget-card" id="dashboardInsightsCard">
+            <div class="widget-header">
+              <div class="widget-title"><i data-lucide="brain-circuit"></i> Smart Insights</div>
+            </div>
+            <div id="insightsList" style="display:flex; flex-direction:column; gap:0.75rem; font-size:0.85rem; line-height:1.5;">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= TRANSACTIONS ======= -->
+    <section class="page" id="page-transactions">
+      <div class="section-header">
+        <h2>All Transactions</h2>
+        <button class="btn-primary" onclick="App.navigate('add-transaction')"><i data-lucide="plus"></i> Add New</button>
+      </div>
+      <!-- Filters -->
+      <div class="filter-bar">
+        <select id="filterType"><option value="">All Types</option><option value="income">Income</option><option value="expense">Expense</option></select>
+        <select id="filterCategory"><option value="">All Categories</option></select>
+        <input type="date" id="filterDateFrom" placeholder="From Date"/>
+        <input type="date" id="filterDateTo" placeholder="To Date"/>
+        <input type="number" id="filterAmtMin" placeholder="Min Amount"/>
+        <input type="number" id="filterAmtMax" placeholder="Max Amount"/>
+        <button class="btn-secondary" onclick="App.applyFilters()">Apply</button>
+        <button class="btn-ghost" onclick="App.clearFilters()">Clear</button>
+      </div>
+      <div class="table-actions">
+        <label class="checkbox-label"><input type="checkbox" id="selectAll" onchange="App.toggleSelectAll(this)"/> Select All</label>
+        <button class="btn-danger-sm" onclick="App.bulkDelete()">Delete Selected</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAllHead" onchange="App.toggleSelectAll(this)"/></th>
+              <th class="sortable" onclick="App.sortTransactions('date')">Date <span id="sort-date-icon">↕</span></th>
+              <th class="sortable" onclick="App.sortTransactions('name')">Name <span id="sort-name-icon">↕</span></th>
+              <th>Type</th>
+              <th class="sortable" onclick="App.sortTransactions('category')">Category <span id="sort-category-icon">↕</span></th>
+              <th class="sortable" onclick="App.sortTransactions('amount')">Amount <span id="sort-amount-icon">↕</span></th>
+              <th>Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="transactionTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Floating Actions Panel -->
+    <div class="floating-action-bar" id="floatingBar">
+      <span class="floating-bar-text" id="floatingBarText">0 selected</span>
+      <button class="btn-danger-sm" onclick="App.bulkDelete()">Delete Selected</button>
+      <button class="btn-ghost" onclick="App.clearSelection()" style="color:#fff; border-color:rgba(255,255,255,0.3)">Deselect</button>
+    </div>
+
+    <!-- ======= ADD / EDIT TRANSACTION ======= -->
+    <section class="page" id="page-add-transaction">
+      <div class="section-header">
+        <h2 id="formTitle">Add Transaction</h2>
+      </div>
+      <div class="form-card">
+        <input type="hidden" id="editId"/>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Transaction Type *</label>
+            <div class="type-toggle">
+              <button type="button" class="type-btn active" data-type="expense"><i data-lucide="trending-down"></i> Expense</button>
+              <button type="button" class="type-btn" data-type="income"><i data-lucide="trending-up"></i> Income</button>
+            </div>
+            <input type="hidden" id="txType" value="expense"/>
+          </div>
+          <div class="form-group">
+            <label for="txName">Transaction Name *</label>
+            <input type="text" id="txName" placeholder="e.g. Grocery Shopping" maxlength="100" required/>
+          </div>
+          <div class="form-group">
+            <label for="txCategory">Category *</label>
+            <select id="txCategory"></select>
+          </div>
+          <div class="form-group">
+            <label for="txAmount">Amount *</label>
+            <input type="number" id="txAmount" placeholder="0.00" min="0.01" step="0.01" required/>
+            <div class="preset-amount-wrap">
+              <div class="preset-amount-btns">
+                <button type="button" class="preset-btn" onclick="App.adjustAmount(100)">+₹100</button>
+                <button type="button" class="preset-btn" onclick="App.adjustAmount(500)">+₹500</button>
+                <button type="button" class="preset-btn" onclick="App.adjustAmount(1000)">+₹1,000</button>
+                <button type="button" class="preset-btn" onclick="App.adjustAmount(5000)">+₹5,000</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="txDate">Date *</label>
+            <input type="date" id="txDate" required/>
+          </div>
+          <div class="form-group full">
+            <label for="txNotes">Notes (max 200 chars)</label>
+            <textarea id="txNotes" placeholder="Optional notes…" maxlength="200" rows="3"></textarea>
+            <small><span id="notesCount">0/200</span></small>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" onclick="App.saveTransaction()"><i data-lucide="check"></i> Save Transaction</button>
+          <button class="btn-ghost" onclick="App.resetForm()">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= BUDGET ======= -->
+    <section class="page" id="page-budget">
+      <div class="section-header"><h2>Budget Management</h2></div>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
+        <div class="budget-setup form-card" style="margin-bottom:0;">
+          <div class="widget-title" style="margin-bottom:1rem;"><i data-lucide="globe"></i> Overall Budget</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="budgetMonth">Month</label>
+              <input type="month" id="budgetMonth"/>
+            </div>
+            <div class="form-group">
+              <label for="budgetAmount">Monthly Budget (₹)</label>
+              <input type="number" id="budgetAmount" placeholder="0.00" min="0"/>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="App.saveBudget()">Set Budget</button>
+        </div>
+
+        <div class="budget-setup form-card" style="margin-bottom:0;">
+          <div class="widget-title" style="margin-bottom:1rem;"><i data-lucide="tag"></i> Category Budget</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="budgetCategory">Category</label>
+              <select id="budgetCategory"></select>
+            </div>
+            <div class="form-group">
+              <label for="budgetCategoryAmount">Monthly Limit (₹)</label>
+              <input type="number" id="budgetCategoryAmount" placeholder="0.00" min="0"/>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="App.saveCategoryBudget()">Set Category Budget</button>
+        </div>
+      </div>
+
+      <div class="budget-display" id="budgetDisplay"></div>
+      
+      <div class="widget-card" style="margin-top:1.5rem;">
+        <div class="widget-title" style="margin-bottom:1rem;"><i data-lucide="tag"></i> Category Budgets Performance</div>
+        <div class="cat-budget-grid" id="categoryBudgetsDisplay">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+      <!-- Daily Survival Calculator & 50/30/20 Rules tracker -->
+      <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:1.5rem; margin-top:1.5rem;">
+        <!-- Daily Survival allowance Card -->
+        <div class="widget-card" style="display:flex; flex-direction:column; justify-content:center;">
+          <div class="widget-title" style="margin-bottom:1rem;"><i data-lucide="piggy-bank" style="color:var(--success);"></i> Student Daily Survival Calculator</div>
+          <div style="font-size:0.875rem; color:var(--text-muted); line-height:1.6; margin-bottom:1rem;">
+            This calculator checks your remaining monthly budget and divides it by the remaining days in the month to show your maximum daily spending limit.
+          </div>
+          <div class="stat-card" style="background:var(--accent-muted); border-color:var(--accent); text-align:center; padding:1.5rem 1rem; margin-bottom:0.5rem;">
+            <div class="stat-label" style="color:var(--accent); font-weight:700;">DAILY SURVIVAL LIMIT</div>
+            <div class="stat-value" id="dailySurvivalLimit" style="font-size:2.25rem; font-weight:800; color:var(--accent); font-family:var(--font-mono); margin:0.5rem 0;">₹0.00</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);" id="survivalDaysRemaining">0 days remaining this month</div>
+          </div>
+        </div>
+
+        <!-- 50/30/20 budget helper Card -->
+        <div class="widget-card">
+          <div class="widget-title" style="margin-bottom:1rem;"><i data-lucide="activity" style="color:var(--accent);"></i> 50 / 30 / 20 Budget Rule Split</div>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">
+            Classifies expenses: <strong>Needs</strong> (Rent, Food, Education, Medical), <strong>Wants</strong> (Shopping, Entertainment, Cabs, Other), and tracks your remaining <strong>Savings/Investments</strong>.
+          </p>
+          <div style="display:flex; flex-direction:column; gap:0.85rem; margin-bottom:1rem;">
+            <!-- Needs bar -->
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">
+                <span>Needs (Target 50%)</span>
+                <span id="needsPctLabel">0% (₹0.00)</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" id="needsPctFill" style="width:0%; background:#3B82F6;"></div></div>
+            </div>
+            <!-- Wants bar -->
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">
+                <span>Wants (Target 30%)</span>
+                <span id="wantsPctLabel">0% (₹0.00)</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" id="wantsPctFill" style="width:0%; background:#F59E0B;"></div></div>
+            </div>
+            <!-- Savings bar -->
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:700; margin-bottom:0.25rem;">
+                <span>Savings (Target 20%)</span>
+                <span id="savingsPctLabel">0% (₹0.00)</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" id="savingsPctFill" style="width:0%; background:#10B981;"></div></div>
+            </div>
+          </div>
+          <!-- Financial Advice bubble -->
+          <div id="financialAdviceBox" style="padding:0.75rem 1rem; border-radius:var(--radius-sm); border:1px solid var(--border); font-size:0.8rem; background:var(--input-bg); color:var(--text-muted); line-height:1.5;">
+            Add some expenses to see custom student budgeting recommendations.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= SUBSCRIPTIONS ======= -->
+    <section class="page" id="page-subscriptions">
+      <div class="section-header"><h2>Bill & Subscription Reminders</h2></div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:1.5rem;">
+        <div class="form-card" style="margin-bottom:0;">
+          <div class="widget-title" style="margin-bottom:1rem; font-size:1rem; font-weight:800; display:flex; align-items:center; gap:0.4rem;"><i data-lucide="plus-circle" style="color:var(--accent);"></i> Add Recurring Payment</div>
+          <div class="form-grid" style="grid-template-columns: 1fr;">
+            <div class="form-group">
+              <label for="subName">Subscription Name *</label>
+              <input type="text" id="subName" placeholder="e.g. Spotify, Wifi Recharge, Netflix"/>
+            </div>
+            <div class="form-group">
+              <label for="subAmount">Billing Amount (₹) *</label>
+              <input type="number" id="subAmount" placeholder="0.00" min="0.01" step="0.01"/>
+            </div>
+            <div class="form-group">
+              <label for="subCategory">Category</label>
+              <select id="subCategory">
+                <option value="Entertainment">Entertainment</option>
+                <option value="Food">Food / Groceries</option>
+                <option value="Transport">Transport / Fuel</option>
+                <option value="Other">Utilities / Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="subDate">Billing Start Date *</label>
+              <input type="date" id="subDate"/>
+            </div>
+            <div class="form-group">
+              <label for="subCycle">Billing Cycle *</label>
+              <select id="subCycle">
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="App.saveSubscription()" style="width:100%; margin-top:1rem;"><i data-lucide="plus"></i> Register Subscription</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:1.25rem;">
+          <div class="widget-card" style="padding:1.25rem; background:var(--accent-muted); border-color:var(--accent);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Monthly Commitments</div>
+                <div style="font-family:var(--font-mono); font-size:1.75rem; font-weight:800; color:var(--accent);" id="subMonthlyCommitment">₹0.00</div>
+              </div>
+              <div class="card-icon" style="position:static; transform:none; background:var(--card-bg); opacity:1; color:var(--accent); width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:50%;"><i data-lucide="bell"></i></div>
+            </div>
+          </div>
+          
+          <div class="widget-card" style="flex:1;">
+            <div class="widget-title" style="margin-bottom:1rem;"><i data-lucide="list"></i> Active Commitments & Due Alerts</div>
+            <div class="table-wrap">
+              <table class="data-table" style="font-size:0.85rem;">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Billing Cycle</th>
+                    <th>Cost</th>
+                    <th>Next Due Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="subscriptionsListBody">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= BILL SPLITTER ======= -->
+    <section class="page" id="page-bill-splitter">
+      <div class="section-header"><h2>Roommate / Hostel Bill Splitter</h2></div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:1.5rem;">
+        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+          <!-- Roommate chips config -->
+          <div class="form-card" style="margin-bottom:0;">
+            <div class="widget-title" style="margin-bottom:1rem; font-size:1rem; font-weight:800; display:flex; align-items:center; gap:0.4rem;"><i data-lucide="users" style="color:var(--accent);"></i> Roommates Setup</div>
+            <div class="form-grid" style="grid-template-columns: 1fr;">
+              <div class="form-group">
+                <label for="roommateName">Add New Member</label>
+                <div style="display:flex; gap:0.5rem;">
+                  <input type="text" id="roommateName" placeholder="e.g. Amit, Rohit" style="flex:1;"/>
+                  <button class="btn-primary" onclick="App.addRoommate()" style="padding:0.65rem 0.85rem;"><i data-lucide="user-plus"></i></button>
+                </div>
+              </div>
+            </div>
+            <div id="roommateChipsContainer" style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:1rem;">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Split bill logger -->
+          <div class="form-card" style="margin-bottom:0;">
+            <div class="widget-title" style="margin-bottom:1rem; font-size:1rem; font-weight:800; display:flex; align-items:center; gap:0.4rem;"><i data-lucide="plus-circle" style="color:var(--accent);"></i> Log Shared Bill</div>
+            <div class="form-grid" style="grid-template-columns: 1fr;">
+              <div class="form-group">
+                <label for="splitDesc">Bill Description *</label>
+                <input type="text" id="splitDesc" placeholder="e.g. WiFi Bill, Grocery Shop, Room Rent"/>
+              </div>
+              <div class="form-group">
+                <label for="splitAmount">Total Bill Amount (₹) *</label>
+                <input type="number" id="splitAmount" placeholder="0.00" min="0.01" step="0.01"/>
+              </div>
+              <div class="form-group">
+                <label for="splitPaidBy">Paid By *</label>
+                <select id="splitPaidBy">
+                  <!-- Roommates populated here -->
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="App.saveSharedBill()" style="width:100%; margin-top:1rem;"><i data-lucide="users"></i> Log & Split Equally</button>
+          </div>
+
+          <!-- Record P2P Loan Card -->
+          <div class="form-card" style="margin-bottom:0;">
+            <div class="widget-title" style="margin-bottom:1rem; font-size:1rem; font-weight:800; display:flex; align-items:center; gap:0.4rem;"><i data-lucide="handshake" style="color:var(--accent);"></i> Record P2P Loan / Debt</div>
+            <div class="form-grid" style="grid-template-columns: 1fr;">
+              <div class="form-group">
+                <label for="loanPerson">Person Name *</label>
+                <input type="text" id="loanPerson" placeholder="e.g. Amit, Suresh, Papa"/>
+              </div>
+              <div class="form-group">
+                <label for="loanAmount">Amount (₹) *</label>
+                <input type="number" id="loanAmount" placeholder="0.00" min="0.01" step="0.01"/>
+              </div>
+              <div class="form-group">
+                <label for="loanType">Transaction Type *</label>
+                <select id="loanType">
+                  <option value="lent">Lent (I gave money / receivable)</option>
+                  <option value="borrowed">Borrowed (I took money / payable)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="loanDate">Date *</label>
+                <input type="date" id="loanDate"/>
+              </div>
+              <div class="form-group">
+                <label for="loanNotes">Notes</label>
+                <input type="text" id="loanNotes" placeholder="e.g. Dinner, project share"/>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="App.saveDirectLoan()" style="width:100%; margin-top:1rem;"><i data-lucide="plus-circle"></i> Log Loan Entry</button>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:1.25rem;">
+          <!-- Settlement debt board -->
+          <div class="widget-card" style="padding:1.25rem; background:var(--accent-muted); border-color:var(--accent);">
+            <div class="widget-title" style="margin-bottom:0.50rem; font-size:0.85rem;"><i data-lucide="badge-percent"></i> ROOM DEBTS & BALANCE TABLE</div>
+            <div id="roommateSettlementsDisplay" style="font-size:0.9rem; font-weight:700; display:flex; flex-direction:column; gap:0.5rem; color:var(--text-primary);">
+              <!-- Rendered via JS (e.g. "Rohit owes Amit ₹200") -->
+            </div>
+          </div>
+
+          <!-- Bills logs -->
+          <div class="widget-card">
+            <div class="widget-title" style="margin-bottom:1rem;"><i data-lucide="history"></i> Shared Bills History</div>
+            <div class="table-wrap">
+              <table class="data-table" style="font-size:0.85rem;">
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th>Total</th>
+                    <th>Paid By</th>
+                    <th>Your Share</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="splitBillsListBody">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Direct Loans Ledger -->
+          <div class="widget-card" style="flex:1;">
+            <div class="widget-title" style="margin-bottom:1rem; display:flex; align-items:center; gap:0.4rem;"><i data-lucide="scale" style="color:var(--accent);"></i> Personal P2P Loans Ledger</div>
+            <div class="table-wrap">
+              <table class="data-table" style="font-size:0.85rem;">
+                <thead>
+                  <tr>
+                    <th>Person</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Date & Notes</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="directLoansListBody">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= SAVINGS GOALS & WISHLIST ======= -->
+    <section class="page" id="page-goals-wishlist">
+      <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
+        <!-- Left: Goals Planner -->
+        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+          <div class="form-card" style="margin-bottom:0;">
+            <div class="widget-title" style="margin-bottom:1rem; font-size:1rem; font-weight:800; display:flex; align-items:center; gap:0.4rem;"><i data-lucide="piggy-bank" style="color:var(--accent);"></i> Create Savings Target (Piggy Bank)</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="goalName">Goal Name *</label>
+                <input type="text" id="goalName" placeholder="e.g. Buy New Phone, Bike Fund"/>
+              </div>
+              <div class="form-group">
+                <label for="goalTarget">Target Price (₹) *</label>
+                <input type="number" id="goalTarget" placeholder="0.00" min="0.01" step="0.01"/>
+              </div>
+              <div class="form-group">
+                <label for="goalDate">Target Month *</label>
+                <input type="month" id="goalDate"/>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="App.saveSavingsGoal()" style="margin-top:0.75rem;"><i data-lucide="plus"></i> Set Savings Goal</button>
+          </div>
+
+          <div class="widget-card" style="flex:1;">
+            <div class="widget-title" style="margin-bottom:1.25rem;"><i data-lucide="award"></i> Target Goals List</div>
+            <div id="savingsGoalsDisplayList" style="display:flex; flex-direction:column; gap:1.25rem;">
+              <!-- Goal progress bars rendered here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Delayed Gratification Wishlist -->
+        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+          <div class="form-card" style="margin-bottom:0; border-color:rgba(245,158,11,0.3)">
+            <div class="widget-title" style="margin-bottom:1rem; color:var(--text-primary);"><i data-lucide="shield-alert" style="color:var(--warning);"></i> 30-Day Impulsive Purchase Cooling-Off</div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.5;">
+              Want to buy something impulsively? Log it here instead. We'll start a <strong>30-day cooling-off lock</strong>. You can only record it as a purchase once the lock expires!
+            </p>
+            <div class="form-grid" style="grid-template-columns: 1fr;">
+              <div class="form-group">
+                <label for="wishName">Item Name *</label>
+                <input type="text" id="wishName" placeholder="e.g. Gaming Headset, Sneakers"/>
+              </div>
+              <div class="form-group">
+                <label for="wishAmount">Cost (₹) *</label>
+                <input type="number" id="wishAmount" placeholder="0.00" min="0.01" step="0.01"/>
+              </div>
+              <div class="form-group">
+                <label for="wishCategory">Category</label>
+                <select id="wishCategory">
+                  <option value="Shopping">Shopping</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Other">Other Wants</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-secondary" onclick="App.addImpulsiveWish()" style="width:100%; border-color:var(--warning); color:var(--warning); background:rgba(245,158,11,0.05); margin-top:0.75rem;"><i data-lucide="clock"></i> Put in Cooling-Off List</button>
+          </div>
+
+          <div class="widget-card" style="flex:1;">
+            <div class="widget-title" style="margin-bottom:1.25rem;"><i data-lucide="hourglass"></i> Cooling-Off Chamber</div>
+            <div id="impulsiveWishlistDisplay" style="display:flex; flex-direction:column; gap:1rem;">
+              <!-- Wishlist items with timers rendered here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= STATISTICS ======= -->
+    <section class="page" id="page-statistics">
+      <div class="section-header"><h2>Statistics</h2></div>
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-title">Savings Trend</div>
+          <canvas id="savingsChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Category Breakdown</div>
+          <canvas id="statsCategoryChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= REPORTS ======= -->
+    <section class="page" id="page-reports">
+      <div class="section-header"><h2>Reports</h2></div>
+      <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
+        <div class="reports-grid" style="margin-bottom:0;">
+          <div class="report-card" onclick="App.generateReport('daily')">
+            <div class="report-icon"><i data-lucide="calendar"></i></div>
+            <div class="report-name">Daily Report</div>
+          </div>
+          <div class="report-card" onclick="App.generateReport('weekly')">
+            <div class="report-icon"><i data-lucide="calendar-range"></i></div>
+            <div class="report-name">Weekly Report</div>
+          </div>
+          <div class="report-card" onclick="App.generateReport('monthly')">
+            <div class="report-icon"><i data-lucide="calendar-days"></i></div>
+            <div class="report-name">Monthly Report</div>
+          </div>
+          <div class="report-card" onclick="App.generateReport('yearly')">
+            <div class="report-icon"><i data-lucide="bar-chart-3"></i></div>
+            <div class="report-name">Yearly Report</div>
+          </div>
+          <div class="report-card" onclick="App.generateReport('category')">
+            <div class="report-icon"><i data-lucide="tag"></i></div>
+            <div class="report-name">Category Report</div>
+          </div>
+        </div>
+
+        <div class="form-card" style="margin-bottom:0;">
+          <div class="widget-title" style="margin-bottom:1rem;"><i data-lucide="calendar"></i> Custom Date Range</div>
+          <div class="form-grid" style="grid-template-columns: 1fr;">
+            <div class="form-group">
+              <label for="reportFromDate">From Date</label>
+              <input type="date" id="reportFromDate"/>
+            </div>
+            <div class="form-group">
+              <label for="reportToDate">To Date</label>
+              <input type="date" id="reportToDate"/>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="App.generateCustomReport()" style="width:100%; margin-top:0.75rem;"><i data-lucide="arrow-right"></i> Generate Custom Range</button>
+        </div>
+      </div>
+
+      <div id="reportResult" class="report-result hidden">
+        <div class="report-header-bar">
+          <h3 id="reportTitle"></h3>
+          <div class="export-btns">
+            <button class="btn-secondary" onclick="App.exportReport('pdf')"><i data-lucide="file-down"></i> PDF</button>
+            <button class="btn-secondary" onclick="App.exportReport('excel')"><i data-lucide="file-spreadsheet"></i> Excel</button>
+            <button class="btn-secondary" onclick="App.exportReport('csv')"><i data-lucide="file-text"></i> CSV</button>
+          </div>
+        </div>
+
+        <div class="report-summary-widgets">
+          <div class="report-widget">
+            <div class="report-widget-lbl">Total Income</div>
+            <div class="report-widget-val amount-income" id="report-sum-income">₹0.00</div>
+          </div>
+          <div class="report-widget">
+            <div class="report-widget-lbl">Total Expenses</div>
+            <div class="report-widget-val amount-expense" id="report-sum-expense">₹0.00</div>
+          </div>
+          <div class="report-widget">
+            <div class="report-widget-lbl">Net Savings</div>
+            <div class="report-widget-val" id="report-sum-net">₹0.00</div>
+          </div>
+        </div>
+
+        <div class="report-visual-row">
+          <div class="chart-card">
+            <div class="chart-title">Breakdown by Category</div>
+            <canvas id="reportChart"></canvas>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="reportTable">
+              <thead id="reportHead"></thead>
+              <tbody id="reportBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= CATEGORIES ======= -->
+    <section class="page" id="page-categories">
+      <div class="section-header"><h2>Category Management</h2></div>
+      <div class="form-card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="newCatName">New Category Name</label>
+            <input type="text" id="newCatName" placeholder="e.g. Travel"/>
+          </div>
+          <div class="form-group">
+            <label for="newCatType">Type</label>
+            <select id="newCatType">
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+              <option value="both">Both</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="App.addCategory()"><i data-lucide="plus"></i> Add Category</button>
+      </div>
+      <div class="categories-list" id="categoriesList"></div>
+    </section>
+
+    <!-- ======= IMPORT/EXPORT ======= -->
+    <section class="page" id="page-import-export">
+      <div class="section-header"><h2>Import / Export</h2></div>
+      <div class="ie-grid">
+        <div class="ie-card">
+          <h3><i data-lucide="upload"></i> Import Statement</h3>
+          <p>Import bank statements (SBI Yono, HDFC, ICICI, etc.) or FinTrack formatted CSV / Excel sheets. Our parser allows custom column mappings.</p>
+          <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="App.handleImportFile(event)"/>
+          <button class="btn-primary" onclick="document.getElementById('importFile').click()"><i data-lucide="file-up"></i> Choose Bank Statement</button>
+        </div>
+        <div class="ie-card">
+          <h3><i data-lucide="download"></i> Export Database</h3>
+          <p>Export your entire transaction database into formatted CSV, Excel worksheets, or landscape PDFs.</p>
+          <div class="export-btns">
+            <button class="btn-secondary" onclick="App.exportAll('csv')"><i data-lucide="file-text"></i> CSV</button>
+            <button class="btn-secondary" onclick="App.exportAll('excel')"><i data-lucide="file-spreadsheet"></i> Excel</button>
+            <button class="btn-secondary" onclick="App.exportAll('pdf')"><i data-lucide="file-down"></i> PDF</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Beginner Help Guide -->
+      <div class="form-card" style="margin-top: 1.75rem;">
+        <div class="widget-title" style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="help-circle" style="color: var(--accent); width: 22px; height: 22px;"></i> How to Import Password-Protected Statements
+        </div>
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.6;">
+          Almost all bank portals encrypt downloaded statements (PDF, Excel, or CSV files) to secure your transaction ledger. Since FinTrack processes your data 100% locally on your computer inside your browser tab (never sending details to any server), it cannot decrypt these files natively. Follow this quick guide to upload successfully:
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+          <div style="padding: 1.15rem; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid var(--border);">
+            <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+              <i data-lucide="key" style="width: 16px; height: 16px; color: var(--warning);"></i> 1. Common Password Formats
+            </div>
+            <ul style="padding-left: 1.25rem; font-size: 0.8rem; color: var(--text-muted); line-height: 1.7;">
+              <li><strong>SBI Yono:</strong> Last 4 digits of your registered mobile number + <code>@</code> + Date of Birth in <code>DDMM</code> format (e.g., <code>9876@2405</code>).</li>
+              <li><strong>HDFC Bank:</strong> Your Customer ID (check your passbook/netbanking).</li>
+              <li><strong>ICICI Bank:</strong> First 4 characters of your name in lowercase + Date & Month of Birth in <code>DDMM</code> format (e.g., <code>amit2405</code>).</li>
+            </ul>
+          </div>
+          
+          <div style="padding: 1.15rem; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid var(--border);">
+            <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+              <i data-lucide="unlock" style="width: 16px; height: 16px; color: var(--success);"></i> 2. Remove Password Protection
+            </div>
+            <ul style="padding-left: 1.25rem; font-size: 0.8rem; color: var(--text-muted); line-height: 1.7;">
+              <li>Open the Excel sheet in <strong>Microsoft Excel</strong> or <strong>Google Sheets</strong>, enter your password, and save/download a copy. Google Sheets downloads are automatically decrypted.</li>
+              <li>In Excel: Go to <strong>File</strong> &rarr; <strong>Info</strong> &rarr; <strong>Protect Workbook</strong> &rarr; <strong>Encrypt with Password</strong>. Clear the password string, press OK, and save.</li>
+            </ul>
+          </div>
+        </div>
+        <div style="padding: 0.85rem 1.15rem; border-radius: var(--radius-sm); background: var(--accent-muted); border: 1px solid var(--accent); font-size: 0.8rem; color: var(--accent); font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; width: 100%;">
+          <i data-lucide="shield-check" style="width:16px; height:16px; flex-shrink:0;"></i> Privacy Guarantee: Your statements are parsed entirely inside your browser cache. No financial data is ever collected or sent over the internet!
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= BACKUP ======= -->
+    <section class="page" id="page-backup">
+      <div class="section-header"><h2>Backup & Restore</h2></div>
+      <div class="ie-grid">
+        <div class="ie-card">
+          <h3><i data-lucide="arrow-up-circle"></i> Create Backup</h3>
+          <p>Download a single JSON file containing all transactions, categories, settings, and budgets to keep a safe backup of your data.</p>
+          <button class="btn-primary" onclick="App.createBackup()"><i data-lucide="download"></i> Download JSON Backup</button>
+        </div>
+        <div class="ie-card">
+          <h3><i data-lucide="arrow-down-circle"></i> Restore Backup</h3>
+          <p>Restore from a previously downloaded JSON backup file. This will merge or overwrite current local settings.</p>
+          <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="App.restoreBackup(event)"/>
+          <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()"><i data-lucide="upload"></i> Upload Backup File</button>
+        </div>
+        <div class="ie-card danger">
+          <h3><i data-lucide="trash-2"></i> Reset All Data</h3>
+          <p>Permanently delete all transaction ledgers, custom categories, budgets, and themes. This cannot be undone.</p>
+          <button class="btn-danger" onclick="App.resetAll()"><i data-lucide="alert-triangle"></i> Reset Everything</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /page-container -->
+</main>
+
+<!-- Bank Statement Importer Mapper Modal -->
+<div class="modal-overlay" id="importMapperModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3>Smart Bank Statement Importer</h3>
+      <button class="modal-close" onclick="App.closeModal('importMapperModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="mapping-workspace">
+        <p>Your statement has been loaded. Set up the column layout mapping to extract your transactions. Separate debit/credit columns are fully supported (like SBI Yono/bank sheets).</p>
+        
+        <div style="font-weight:700; font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.25rem;">Amount Representation Type</div>
+        <div class="toggle-mapping-type">
+          <label><input type="radio" name="amtType" value="single" checked onchange="App.toggleAmountMapping(this.value)"/> Single Amount Column</label>
+          <label><input type="radio" name="amtType" value="split" onchange="App.toggleAmountMapping(this.value)"/> Separate Debit/Credit Columns</label>
+        </div>
+        
+        <div class="mapping-columns-grid">
+          <div class="mapping-col-card">
+            <label for="mapDate">Date Column *</label>
+            <select id="mapDate"></select>
+          </div>
+          <div class="mapping-col-card">
+            <label for="mapDesc">Description/Notes *</label>
+            <select id="mapDesc"></select>
+          </div>
+          <div class="mapping-col-card" id="mapSingleAmtCol">
+            <label for="mapAmount">Amount Column *</label>
+            <select id="mapAmount"></select>
+          </div>
+          <div class="mapping-col-card" id="mapTypeIndicatorCard">
+            <label for="mapTypeIndicator">Type Column (Optional)</label>
+            <select id="mapTypeIndicator"></select>
+          </div>
+          <div class="mapping-col-card split-amt-col" style="display:none">
+            <label for="mapDebit">Debit (Withdrawals/Expenses) *</label>
+            <select id="mapDebit"></select>
+          </div>
+          <div class="mapping-col-card split-amt-col" style="display:none">
+            <label for="mapCredit">Credit (Deposits/Income) *</label>
+            <select id="mapCredit"></select>
+          </div>
+        </div>
+        
+        <div class="statement-preview-wrap">
+          <div class="statement-preview-title">Raw Table Preview (Rows 1-5)</div>
+          <div class="preview-table-scroll">
+            <table class="preview-mini-table" id="importPreviewTable"></table>
+          </div>
+        </div>
+        
+        <button class="btn-primary" onclick="App.parseStatementWithMapping()" style="align-self:flex-start; margin-top:0.5rem;"><i data-lucide="settings"></i> Parse & Review Transactions</button>
+      </div>
+      
+      <!-- Review Panel (shows up after clicking Parse) -->
+      <div class="review-workspace" id="importReviewWorkspace" style="display:none">
+        <hr style="border-top: 1px solid var(--border); margin: 1.5rem 0 1rem 0;"/>
+        <div class="widget-title" style="margin-bottom:0.5rem"><i data-lucide="clipboard-list"></i> Review Detected Transactions (<span id="reviewCount">0</span> transactions)</div>
+        <p>Deselect rows to exclude, assign category classifications, and verify amounts prior to import.</p>
+        
+        <div class="review-table-scroll">
+          <table class="review-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="reviewSelectAll" checked onchange="App.toggleReviewSelectAll(this)"/></th>
+                <th>Date</th>
+                <th>Name / Particulars</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Category Tag</th>
+              </tr>
+            </thead>
+            <tbody id="reviewTableBody"></tbody>
+          </table>
+        </div>
+        
+        <div class="modal-actions" style="margin-top:1.5rem;">
+          <button class="btn-primary" onclick="App.finalizeImport()"><i data-lucide="check-square"></i> Import Checked Ledger</button>
+          <button class="btn-ghost" onclick="App.closeModal('importMapperModal')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Transaction Modal -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Transaction Details</h3>
+      <button class="modal-close" onclick="App.closeModal('viewModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body" id="viewModalBody"></div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 id="confirmTitle">Confirm</h3>
+      <button class="modal-close" onclick="App.closeModal('confirmModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p id="confirmMessage"></p>
+      <div class="modal-actions">
+        <button class="btn-danger" id="confirmOk">Confirm</button>
+        <button class="btn-ghost" onclick="App.closeModal('confirmModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Notepad Side-Drawer -->
+<div class="notepad-drawer" id="notepadDrawer">
+  <div class="notepad-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.75rem;">
+    <h3 style="font-family:var(--font-display); font-size:1.1rem; font-weight:800; display:flex; align-items:center; gap:0.4rem;"><i data-lucide="file-text" style="color:var(--accent);"></i> Quick Scratchpad</h3>
+    <button class="modal-close" id="closeNotepad" style="width:28px; height:28px;"><i data-lucide="x"></i></button>
+  </div>
+  <textarea id="notepadArea" placeholder="Jot down notes here...
+• Shopping list
+• Bill drafts
+• Reminders (e.g., pay back Amit ₹300)
+Auto-saves in real-time!" style="width:100%; height:calc(100% - 100px); resize:none; padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--input-bg); color:var(--text-primary); font-family:var(--font-body); font-size:0.9rem; outline:none; line-height:1.6;"></textarea>
+  <div class="notepad-footer" style="display:flex; align-items:center; justify-content:space-between; margin-top:0.75rem; font-size:0.75rem;">
+    <span style="color:var(--text-muted);">Saves locally in browser</span>
+    <button class="btn-danger-sm" onclick="document.getElementById('notepadArea').value = ''; localStorage.setItem('ft_scratchpad', ''); toast('Notepad cleared!', 'info');" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Clear Notes</button>
+  </div>
+</div>
+
+<!-- Lock / Login Screen Overlay -->
+<div class="lock-screen-overlay" id="lockScreen" style="display: none;">
+  <div class="lock-card">
+    <div class="lock-logo" style="margin-bottom:1rem;">
+      <div class="brand-icon" style="margin: 0 auto 1rem auto; width: 44px; height: 44px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%); color:#fff; box-shadow:0 4px 12px var(--accent-glow);"><i data-lucide="wallet" style="width:22px; height:22px; stroke-width:2.5px;"></i></div>
+      <h2 style="font-family: var(--font-display); font-weight: 800; font-size: 1.75rem; letter-spacing: -0.02em; color: #fff; margin: 0;">FinTrack Lock</h2>
+      <p id="lockScreenSubtitle" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 0.25rem;">Enter your passcode to unlock ledger</p>
+    </div>
+    
+    <!-- Registration Form -->
+    <div id="lockRegisterForm" style="display: none; flex-direction: column; gap: 1rem; margin-top: 1rem; width: 100%;">
+      <div class="form-group" style="text-align: left; display:flex; flex-direction:column; gap:0.4rem;">
+        <label style="color: rgba(255,255,255,0.7); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Create Username</label>
+        <input type="text" id="regUsername" placeholder="e.g. Student123" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.9rem; outline: none; width:100%;"/>
+      </div>
+      <div class="form-group" style="text-align: left; display:flex; flex-direction:column; gap:0.4rem;">
+        <label style="color: rgba(255,255,255,0.7); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Set 4-Digit Access PIN</label>
+        <input type="password" id="regPin" maxlength="4" placeholder="••••" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.9rem; text-align: center; font-family: monospace; letter-spacing: 0.5em; outline: none; width:100%;"/>
+      </div>
+      <button class="btn-primary" onclick="App.registerLocalAccount()" style="margin-top: 0.5rem; width: 100%; border:none; padding:0.75rem;">Create Account & Enter</button>
+    </div>
+    
+    <!-- Login Form (PIN entry) -->
+    <div id="lockLoginForm" style="display: none; flex-direction: column; align-items: center; gap: 1rem; margin-top: 1rem; width: 100%;">
+      <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom:0.5rem;" id="loginGreeting">Welcome back!</div>
+      <!-- PIN display dots -->
+      <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
+        <span class="pin-dot" id="dot-1"></span>
+        <span class="pin-dot" id="dot-2"></span>
+        <span class="pin-dot" id="dot-3"></span>
+        <span class="pin-dot" id="dot-4"></span>
+      </div>
+      <!-- Keypad -->
+      <div class="pin-keypad">
+        <button onclick="App.pressPinKey('1')">1</button>
+        <button onclick="App.pressPinKey('2')">2</button>
+        <button onclick="App.pressPinKey('3')">3</button>
+        <button onclick="App.pressPinKey('4')">4</button>
+        <button onclick="App.pressPinKey('5')">5</button>
+        <button onclick="App.pressPinKey('6')">6</button>
+        <button onclick="App.pressPinKey('7')">7</button>
+        <button onclick="App.pressPinKey('8')">8</button>
+        <button onclick="App.pressPinKey('9')">9</button>
+        <button onclick="App.clearPin()" style="font-size: 0.8rem; color: var(--danger); background:none; border:none; cursor:pointer;">Clear</button>
+        <button onclick="App.pressPinKey('0')">0</button>
+        <button onclick="App.backspacePin()" style="font-size: 0.8rem; color: var(--warning); background:none; border:none; cursor:pointer;">Delete</button>
+      </div>
+      <button class="btn-ghost" onclick="App.resetPinReset()" style="font-size: 0.75rem; border: none; background: transparent; color: rgba(255,255,255,0.4); margin-top: 1rem; padding:0; cursor:pointer;">Reset App Data (Wipe All)</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js?v=7"></script>
+</body>
+</html>
