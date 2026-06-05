@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # FinTrack — Personal Expense Tracker
 
 FinTrack is a client-side personal expense tracker (HTML/CSS/JS) that stores data in browser localStorage. This repository contains the static site you can run locally or deploy as a PWA.
@@ -19,7 +18,15 @@ npx http-server -p 8000
 
 ## Make it an installable app (PWA)
 
-- Add a `manifest.json` and a service worker to enable installability and better offline support.
+This project now includes a `manifest.json` and `service-worker.js` so it can be installed like an app on supported browsers.
+
+To install:
+
+1. Open the app in Chrome/Edge on desktop or mobile.
+2. Choose the browser menu and select `Install FinTrack` or `Add to Home screen`.
+3. Launch it from the shortcut or home screen.
+
+The site will open in standalone mode with its own app window and keep working locally using cached files.
 
 ## Push to GitHub
 
@@ -44,4 +51,4 @@ If the GitHub repo does not exist yet, create it on GitHub first (or use the Git
 ## Notes
 
 - Data is stored in `localStorage`; installing to home screen keeps data on-device.
-- If you want, I can add `manifest.json`, `service-worker.js`, app icons, and automate the PWA setup.
+- The app should work offline for the main shell files after the first load.
