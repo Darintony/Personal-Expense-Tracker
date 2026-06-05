@@ -860,6 +860,13 @@
           <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="App.restoreBackup(event)"/>
           <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()"><i data-lucide="upload"></i> Upload Backup File</button>
         </div>
+        <div class="ie-card" id="appLockSettingsCard">
+          <h3><i data-lucide="shield-alert"></i> App Passcode Lock</h3>
+          <p id="appLockStatusText">Secure your ledger with a 4-digit PIN passcode required upon opening the application.</p>
+          <div id="appLockActions" style="display:flex; flex-direction:column; gap:0.75rem; width:100%; margin-top:1rem;">
+            <!-- Rendered dynamically via JS -->
+          </div>
+        </div>
         <div class="ie-card danger">
           <h3><i data-lucide="trash-2"></i> Reset All Data</h3>
           <p>Permanently delete all transaction ledgers, custom categories, budgets, and themes. This cannot be undone.</p>
@@ -1010,22 +1017,51 @@ Auto-saves in real-time!" style="width:100%; height:calc(100% - 100px); resize:n
       <p id="lockScreenSubtitle" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 0.25rem;">Enter your passcode to unlock ledger</p>
     </div>
     
-    <!-- Registration Form -->
+    <!-- Registration (Sign Up) Form -->
     <div id="lockRegisterForm" style="display: none; flex-direction: column; gap: 1rem; margin-top: 1rem; width: 100%;">
+      <div style="font-size: 1.1rem; font-weight: 700; color: #fff; text-align: center; margin-bottom: 0.5rem;">Create Account</div>
       <div class="form-group" style="text-align: left; display:flex; flex-direction:column; gap:0.4rem;">
-        <label style="color: rgba(255,255,255,0.7); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Create Username</label>
-        <input type="text" id="regUsername" placeholder="e.g. Student123" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.9rem; outline: none; width:100%;"/>
+        <label style="color: rgba(255,255,255,0.7); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Full Name</label>
+        <input type="text" id="regUsername" placeholder="e.g. Darin Tony" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.9rem; outline: none; width:100%;"/>
       </div>
       <div class="form-group" style="text-align: left; display:flex; flex-direction:column; gap:0.4rem;">
-        <label style="color: rgba(255,255,255,0.7); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Set 4-Digit Access PIN</label>
-        <input type="password" id="regPin" maxlength="4" placeholder="••••" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.9rem; text-align: center; font-family: monospace; letter-spacing: 0.5em; outline: none; width:100%;"/>
+        <label style="color: rgba(255,255,255,0.7); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Email Address</label>
+        <input type="email" id="regEmail" placeholder="e.g. darin@example.com" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.9rem; outline: none; width:100%;"/>
       </div>
-      <button class="btn-primary" onclick="App.registerLocalAccount()" style="margin-top: 0.5rem; width: 100%; border:none; padding:0.75rem;">Create Account & Enter</button>
+      <div class="form-group" style="text-align: left; display:flex; flex-direction:column; gap:0.4rem;">
+        <label style="color: rgba(255,255,255,0.7); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Password</label>
+        <input type="password" id="regPassword" placeholder="••••••••" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.9rem; outline: none; width:100%;"/>
+      </div>
+      <div class="form-group" style="text-align: left; display:flex; flex-direction:column; gap:0.4rem;">
+        <label style="color: rgba(255,255,255,0.7); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Confirm Password</label>
+        <input type="password" id="regConfirmPassword" placeholder="••••••••" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.9rem; outline: none; width:100%;"/>
+      </div>
+      <button class="btn-primary" onclick="App.handleLocalSignup()" style="margin-top: 0.5rem; width: 100%; border:none; padding:0.75rem; cursor:pointer;">Create Account & Enter</button>
+      <div style="text-align:center; margin-top:0.5rem; font-size:0.8rem;">
+        <a href="#" onclick="App.showLoginForm(); return false;" style="color:var(--accent-light); text-decoration:none; font-weight:600;">Already have an account? Log In</a>
+      </div>
     </div>
     
-    <!-- Login Form (PIN entry) -->
-    <div id="lockLoginForm" style="display: none; flex-direction: column; align-items: center; gap: 1rem; margin-top: 1rem; width: 100%;">
-      <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom:0.5rem;" id="loginGreeting">Welcome back!</div>
+    <!-- Account Log In Form -->
+    <div id="lockLoginForm" style="display: none; flex-direction: column; gap: 1rem; margin-top: 1rem; width: 100%;">
+      <div style="font-size: 1.1rem; font-weight: 700; color: #fff; text-align: center; margin-bottom: 0.5rem;">Account Log In</div>
+      <div class="form-group" style="text-align: left; display:flex; flex-direction:column; gap:0.4rem;">
+        <label style="color: rgba(255,255,255,0.7); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Email Address</label>
+        <input type="email" id="loginEmail" placeholder="e.g. darin@example.com" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.9rem; outline: none; width:100%;"/>
+      </div>
+      <div class="form-group" style="text-align: left; display:flex; flex-direction:column; gap:0.4rem;">
+        <label style="color: rgba(255,255,255,0.7); font-size:0.75rem; font-weight:700; text-transform:uppercase;">Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.9rem; outline: none; width:100%;"/>
+      </div>
+      <button class="btn-primary" onclick="App.handleLocalLogin()" style="margin-top: 0.5rem; width: 100%; border:none; padding:0.75rem; cursor:pointer;">Log In & Enter</button>
+      <div style="text-align:center; margin-top:0.5rem; font-size:0.8rem;">
+        <a href="#" onclick="App.showSignupForm(); return false;" style="color:var(--accent-light); text-decoration:none; font-weight:600;">New to FinTrack? Sign Up</a>
+      </div>
+    </div>
+
+    <!-- Passcode Device Lock (Keypad entry) -->
+    <div id="lockPinForm" style="display: none; flex-direction: column; align-items: center; gap: 1rem; margin-top: 1rem; width: 100%;">
+      <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom:0.5rem;" id="loginGreeting">App Locked</div>
       <!-- PIN display dots -->
       <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
         <span class="pin-dot" id="dot-1"></span>
@@ -1048,6 +1084,11 @@ Auto-saves in real-time!" style="width:100%; height:calc(100% - 100px); resize:n
         <button onclick="App.pressPinKey('0')">0</button>
         <button onclick="App.backspacePin()" style="font-size: 0.8rem; color: var(--warning); background:none; border:none; cursor:pointer;">Delete</button>
       </div>
+
+      <div style="text-align:center; margin-top:1rem; font-size:0.8rem; width:100%;">
+        <a href="#" onclick="App.unlockPinWithPassword(); return false;" style="color:rgba(255,255,255,0.6); text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:0.25rem;"><i data-lucide="unlock" style="width:12px; height:12px;"></i> Unlock with Account Password</a>
+      </div>
+
       <button class="btn-ghost" onclick="App.resetPinReset()" style="font-size: 0.75rem; border: none; background: transparent; color: rgba(255,255,255,0.4); margin-top: 1rem; padding:0; cursor:pointer;">Reset App Data (Wipe All)</button>
     </div>
   </div>

@@ -19,9 +19,11 @@ const LS = {
   WISHLIST:     'ft_wishlist',
   SCRATCHPAD:   'ft_scratchpad',
   USERNAME:     'ft_username',
+  PASSWORD:     'ft_password',
   PIN:          'ft_pin',
   SESSION_ACTIVE:'ft_session_active',
   LOANS:        'ft_loans',
+  EMAIL:        'ft_email',
 };
 
 /* ── Default Categories ── */
@@ -207,7 +209,6 @@ const App = {
     this.bindEvents();
     this.navigate('dashboard');
     this.populateCategoryDropdowns();
-    
     // Check passcode app lock
     this.checkAppLock();
     
@@ -243,6 +244,7 @@ const App = {
     if (page === 'subscriptions')   this.renderSubscriptions();
     if (page === 'bill-splitter')   this.renderBillSplitter();
     if (page === 'goals-wishlist')  this.renderGoalsWishlist();
+    if (page === 'backup')          this.renderAppLockSettings();
     
     if (window.lucide) lucide.createIcons();
   },
@@ -2420,58 +2422,43 @@ const App = {
 
   checkAppLock() {
     const username = localStorage.getItem(LS.USERNAME);
+    const pin = localStorage.getItem(LS.PIN);
     const sessionActive = sessionStorage.getItem(LS.SESSION_ACTIVE) === 'true';
     
     if (!username) {
       // First time use -> Show Registration screen
       $('lockScreen').style.display = 'flex';
-      $('lockRegisterForm').style.display = 'flex';
-      $('lockLoginForm').style.display = 'none';
-      $('lockScreenSubtitle').textContent = 'Create a secure local account to save your transaction ledger.';
-    } else if (!sessionActive) {
-      // Username exists but session is not active -> Show PIN Entry
+      this.showSignupForm();
+    } else if (pin && !sessionActive) {
+      // PIN is configured but session is not active -> Show PIN Lock Entry
       $('lockScreen').style.display = 'flex';
       $('lockRegisterForm').style.display = 'none';
-      $('lockLoginForm').style.display = 'flex';
-      $('loginGreeting').textContent = `Welcome back, ${username}!`;
-      $('lockScreenSubtitle').textContent = 'Enter your 4-digit passcode PIN to access your ledger.';
+      $('lockLoginForm').style.display = 'none';
+      $('lockPinForm').style.display = 'flex';
+      $('loginGreeting').textContent = `App Locked`;
+      $('lockScreenSubtitle').textContent = `Welcome back, ${username}! Enter your passcode to unlock.`;
       this.currentPinEntry = '';
       this.updatePinDots();
+    } else if (!sessionActive) {
+      // Account exists, but session is not active -> Show Log In Screen
+      $('lockScreen').style.display = 'flex';
+      this.showLoginForm();
     } else {
-      // Active session -> Hide lockscreen
+      // Active session -> Bypass lock screen
       $('lockScreen').style.display = 'none';
     }
   },
 
   lockApp() {
+    const pin = localStorage.getItem(LS.PIN);
+    if (!pin) {
+      toast('Please set up an App Lock PIN passcode under Backup settings first!', 'warning');
+      this.navigate('backup');
+      return;
+    }
     sessionStorage.removeItem(LS.SESSION_ACTIVE);
     this.checkAppLock();
     toast('App locked successfully!', 'info');
-  },
-
-  registerLocalAccount() {
-    const user = $('regUsername').value.trim();
-    const pin = $('regPin').value.trim();
-    
-    if (!user) {
-      toast('Please enter a username.', 'error');
-      return;
-    }
-    if (!/^\d{4}$/.test(pin)) {
-      toast('Passcode must be exactly 4 digits.', 'error');
-      return;
-    }
-    
-    localStorage.setItem(LS.USERNAME, user);
-    localStorage.setItem(LS.PIN, pin);
-    sessionStorage.setItem(LS.SESSION_ACTIVE, 'true');
-    
-    $('regUsername').value = '';
-    $('regPin').value = '';
-    
-    $('lockScreen').style.display = 'none';
-    toast(`Account registered! Welcome, ${user}!`, 'success');
-    this.renderDashboard();
   },
 
   pressPinKey(key) {
@@ -2612,6 +2599,171 @@ const App = {
       this.renderBillSplitter();
       this.renderDashboard();
     });
+  },
+
+  /* ───────── GOOGLE OAUTH AUTHENTICATION ───────── */
+  showSignupForm() {
+    $('lockRegisterForm').style.display = 'flex';
+    $('lockLoginForm').style.display = 'none';
+    $('lockPinForm').style.display = 'none';
+    $('lockScreenSubtitle').textContent = 'Create a secure local account to start tracking expenses.';
+  },
+
+  showLoginForm() {
+    $('lockRegisterForm').style.display = 'none';
+    $('lockLoginForm').style.display = 'flex';
+    $('lockPinForm').style.display = 'none';
+    $('lockScreenSubtitle').textContent = 'Enter your email and password to access your ledger.';
+  },
+
+  handleLocalSignup() {
+    const name = $('regUsername').value.trim();
+    const email = $('regEmail').value.trim();
+    const password = $('regPassword').value;
+    const confirmPassword = $('regConfirmPassword').value;
+    
+    if (!name || !email || !password || !confirmPassword) {
+      toast('Please fill in all registration fields.', 'error');
+      return;
+    }
+    
+    // Basic email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast('Please enter a valid email address.', 'error');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      toast('Passwords do not match.', 'error');
+      return;
+    }
+    
+    if (password.length < 4) {
+      toast('Password must be at least 4 characters long.', 'error');
+      return;
+    }
+    
+    // Save locally
+    localStorage.setItem(LS.USERNAME, name);
+    localStorage.setItem(LS.EMAIL, email);
+    localStorage.setItem(LS.PASSWORD, password);
+    
+    // Activate session
+    sessionStorage.setItem(LS.SESSION_ACTIVE, 'true');
+    
+    // Hide lock screen
+    $('lockScreen').style.display = 'none';
+    toast(`Account registered! Welcome, ${name}!`, 'success');
+    this.renderDashboard();
+    
+    // Clear inputs
+    $('regUsername').value = '';
+    $('regEmail').value = '';
+    $('regPassword').value = '';
+    $('regConfirmPassword').value = '';
+  },
+
+  handleLocalLogin() {
+    const email = $('loginEmail').value.trim();
+    const password = $('loginPassword').value;
+    
+    if (!email || !password) {
+      toast('Please enter both email and password.', 'error');
+      return;
+    }
+    
+    const savedEmail = localStorage.getItem(LS.EMAIL);
+    const savedPassword = localStorage.getItem(LS.PASSWORD);
+    const savedName = localStorage.getItem(LS.USERNAME);
+    
+    if (email === savedEmail && password === savedPassword) {
+      sessionStorage.setItem(LS.SESSION_ACTIVE, 'true');
+      $('lockScreen').style.display = 'none';
+      toast(`Welcome back, ${savedName}!`, 'success');
+      this.renderDashboard();
+      
+      // Clear inputs
+      $('loginEmail').value = '';
+      $('loginPassword').value = '';
+    } else {
+      const card = document.querySelector('.lock-card');
+      card.classList.add('shake');
+      toast('Invalid email or password.', 'error');
+      setTimeout(() => card.classList.remove('shake'), 400);
+    }
+  },
+
+  unlockPinWithPassword() {
+    const password = prompt('Enter your account password to bypass passcode screen lock:');
+    if (password === null) return;
+    
+    const savedPassword = localStorage.getItem(LS.PASSWORD);
+    if (password === savedPassword) {
+      sessionStorage.setItem(LS.SESSION_ACTIVE, 'true');
+      $('lockScreen').style.display = 'none';
+      toast('Identity verified! App unlocked.', 'success');
+      this.renderDashboard();
+    } else {
+      toast('Incorrect account password. Cannot unlock app.', 'error');
+    }
+  },
+
+  /* ───────── APP PASSCODE SCREEN LOCK SETTINGS ───────── */
+  renderAppLockSettings() {
+    const pin = localStorage.getItem(LS.PIN);
+    const container = $('appLockActions');
+    const statusText = $('appLockStatusText');
+    
+    if (!container) return;
+    
+    if (pin) {
+      statusText.innerHTML = `<span style="color:var(--success); font-weight:700;"><i data-lucide="shield" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i> Passcode Lock is Enabled</span>. Your ledger is secured with a 4-digit passcode PIN.`;
+      container.innerHTML = `
+        <button class="btn-secondary" style="width:100%; border-color:var(--danger); color:var(--danger); background:rgba(239, 68, 68, 0.05);" onclick="App.disablePasscodeLock()"><i data-lucide="shield-off"></i> Disable Passcode Lock</button>
+        <button class="btn-primary" style="width:100%;" onclick="App.changePasscodeLock()"><i data-lucide="key-round"></i> Change Passcode PIN</button>
+      `;
+    } else {
+      statusText.innerHTML = `<span style="color:var(--text-muted); font-weight:600;"><i data-lucide="shield-alert" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i> Passcode Lock is Disabled</span>. Set a 4-digit PIN code to secure your ledger data.`;
+      container.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+          <label style="font-size:0.75rem; font-weight:700; color:var(--text-primary);">Set 4-Digit Passcode PIN</label>
+          <input type="password" id="settingsPinInput" maxlength="4" placeholder="••••" style="text-align:center; font-family:monospace; letter-spacing:0.5em; padding:0.6rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--input-bg); color:var(--text-primary); outline:none;"/>
+        </div>
+        <button class="btn-primary" style="width:100%; margin-top:0.25rem;" onclick="App.enablePasscodeLock()"><i data-lucide="shield"></i> Enable Passcode Lock</button>
+      `;
+    }
+    if (window.lucide) lucide.createIcons();
+  },
+
+  enablePasscodeLock() {
+    const pin = $('settingsPinInput').value.trim();
+    if (!/^\d{4}$/.test(pin)) {
+      toast('Passcode must be exactly 4 digits.', 'error');
+      return;
+    }
+    localStorage.setItem(LS.PIN, pin);
+    toast('Passcode lock enabled successfully!', 'success');
+    this.renderAppLockSettings();
+  },
+
+  disablePasscodeLock() {
+    this.confirm('Are you sure you want to disable the passcode lock screen?', () => {
+      localStorage.removeItem(LS.PIN);
+      toast('Passcode lock disabled.', 'info');
+      this.renderAppLockSettings();
+    });
+  },
+
+  changePasscodeLock() {
+    const newPin = prompt('Enter your new 4-digit passcode PIN:');
+    if (newPin === null) return; // cancelled
+    if (!/^\d{4}$/.test(newPin)) {
+      toast('Passcode must be exactly 4 digits.', 'error');
+      return;
+    }
+    localStorage.setItem(LS.PIN, newPin);
+    toast('Passcode PIN changed successfully!', 'success');
+    this.renderAppLockSettings();
   },
 
 };
